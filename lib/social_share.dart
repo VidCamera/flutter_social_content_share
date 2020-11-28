@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-
-enum ShareType { facebookWithoutImage, instagramWithImageUrl, more }
 
 class SocialShare {
   static const MethodChannel _channel = const MethodChannel('social_share');
@@ -16,7 +15,7 @@ class SocialShare {
 
   static Future<String> shareOnWhatsapp({
     String number,
-    String text,
+    @required String text,
   }) async {
     final Map<String, dynamic> params = <String, dynamic>{
       "number": number,
@@ -27,7 +26,7 @@ class SocialShare {
 
   static Future<String> shareOnSMS({
     List recipients,
-    String text,
+    @required String text,
   }) async {
     final Map<String, dynamic> params = <String, dynamic>{
       "recipients": recipients,
@@ -41,7 +40,7 @@ class SocialShare {
       List ccrecipients,
       List bccrecipients,
       String subject,
-      String body,
+      @required String body,
       bool isHTML}) async {
     final Map<String, dynamic> params = <String, dynamic>{
       "recipients": recipients,
@@ -55,7 +54,7 @@ class SocialShare {
   }
 
   static Future<String> shareOnFacebook({
-    String url,
+    @required String url,
     String quote,
   }) async {
     final Map<String, dynamic> params = <String, dynamic>{
@@ -66,7 +65,7 @@ class SocialShare {
   }
 
   static Future<String> shareOnInstagram({
-    String filePath,
+    @required String filePath,
   }) async {
     final Map<String, dynamic> params = <String, dynamic>{
       "filePath": filePath,
@@ -74,7 +73,9 @@ class SocialShare {
     return await _channel.invokeMethod('shareOnInstagram', params);
   }
 
-  static Future<bool> copyToClipboard(content) async {
+  static Future<bool> copyToClipboard({
+    @required String content,
+  }) async {
     final Map<String, String> args = <String, String>{
       "content": content.toString()
     };
@@ -83,7 +84,7 @@ class SocialShare {
   }
 
   static Future<String> shareOnSnapchat({
-    String filePath,
+    @required String filePath,
   }) async {
     final Map<String, dynamic> args = <String, dynamic>{
       "filePath": filePath,
@@ -92,6 +93,7 @@ class SocialShare {
   }
 
   static Future<String> shareOnTwitter({
+    String captionText,
     String url,
   }) async {
     String modifiedUrl;
@@ -105,13 +107,14 @@ class SocialShare {
     }
 
     Map<String, dynamic> args = <String, dynamic>{
+      "captionText": Uri.parse(captionText + " ").toString(),
       "url": modifiedUrl,
     };
     return await _channel.invokeMethod('shareOnTwitter', args);
   }
 
   static Future<String> shareOnTelegram({
-    String content,
+    @required String content,
   }) async {
     final Map<String, dynamic> args = <String, dynamic>{"content": content};
     final String version = await _channel.invokeMethod('shareOnTelegram', args);
@@ -119,8 +122,8 @@ class SocialShare {
   }
 
   static Future<bool> shareOptions({
+    @required String contentText,
     String imagePath,
-    String contentText,
   }) async {
     Map<String, dynamic> args;
     if (Platform.isIOS) {

@@ -20,6 +20,11 @@
 		<string>fbapi20150629</string>
 		<string>instagram</string>
 		<string>instagram-stories</string>
+		<string>facebook</string>
+		<string>instagram</string>
+		<string>twitter</string>
+		<string>tg</string>
+		<string>snapchat</string>
 	</array>
 	<key>FacebookAppID</key>
 	<string>xxxxxxxxxxx</string>
@@ -77,5 +82,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
 </dict>
 </plist>
