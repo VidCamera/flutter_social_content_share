@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_social_content_share/flutter_social_content_share.dart';
+import 'package:flutter_social_content_share/social_share.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,7 +28,7 @@ class _MyAppState extends State<MyApp> {
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      platformVersion = await FlutterSocialContentShare.platformVersion;
+      platformVersion = await SocialShare.platformVersion;
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -41,49 +43,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  /// SHARE ON FACEBOOK CALL
-  shareOnFacebook() async {
-    String result = await FlutterSocialContentShare.share(
-        type: ShareType.facebookWithoutImage,
-        url: "https://www.apple.com",
-        quote: "captions");
-    print(result);
-  }
-
-  /// SHARE ON INSTAGRAM CALL
-  shareOnInstagram() async {
-    String result = await FlutterSocialContentShare.share(
-        type: ShareType.instagramWithImageUrl,
-        imageUrl:
-            "https://post.healthline.com/wp-content/uploads/2020/09/healthy-eating-ingredients-732x549-thumbnail-732x549.jpg");
-    print(result);
-  }
-
-  /// SHARE ON WHATSAPP CALL
-  shareWatsapp() async {
-    String result = await FlutterSocialContentShare.shareOnWhatsapp(
-        "0000000", "Text Appear hear");
-    print(result);
-  }
-
-  /// SHARE ON EMAIL CALL
-  shareEmail() async {
-    String result = await FlutterSocialContentShare.shareOnEmail(
-        recipients: ["xxxx.xxx@gmail.com"],
-        subject: "Subject appears here",
-        body: "Body appears here",
-        isHTML: true); //default isHTML: False
-    print(result);
-  }
-
-  /// SHARE ON SMS CALL
-  shareSMS() async {
-    String result = await FlutterSocialContentShare.shareOnSMS(
-        recipients: ["xxxxxx"], text: "Text appears here");
-    print(result);
-  }
-
-  ///Build Context
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -91,45 +50,115 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Column(
-          children: <Widget>[
-            Text('Running on: $_platformVersion\n'),
-            RaisedButton(
-              child: Text("Share to facebook button"),
-              color: Colors.red,
-              onPressed: () {
-                shareOnFacebook();
-              },
-            ),
-            RaisedButton(
-              child: Text("Share to instagram button"),
-              color: Colors.red,
-              onPressed: () {
-                shareOnInstagram();
-              },
-            ),
-            RaisedButton(
-              child: Text("Share to whatsapp button"),
-              color: Colors.red,
-              onPressed: () {
-                shareWatsapp();
-              },
-            ),
-            RaisedButton(
-              child: Text("Share to email button"),
-              color: Colors.red,
-              onPressed: () {
-                shareEmail();
-              },
-            ),
-            RaisedButton(
-              child: Text("Share to sms button"),
-              color: Colors.red,
-              onPressed: () {
-                shareSMS();
-              },
-            ),
-          ],
+        body: Container(
+          color: Colors.white,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Running on: $_platformVersion\n',
+                textAlign: TextAlign.center,
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  final file =
+                      await ImagePicker().getVideo(source: ImageSource.gallery);
+                  SocialShare.shareOnSnapchat(filePath: file.path).then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share On Snapchat"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  final file =
+                      await ImagePicker().getVideo(source: ImageSource.gallery);
+                  SocialShare.shareOnInstagram(filePath: file.path)
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share On Instagram"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.shareOnFacebook(url: 'https://vid.camera')
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share on facebook"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.copyToClipboard(
+                    "This is Social Share plugin",
+                  ).then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Copy to clipboard"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.shareOnTwitter(url: "https://vid.camera")
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share on twitter"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.shareOnSMS(
+                          text: "This is Social Share Sms example")
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share on Sms"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.shareOnWhatsapp(
+                          text: "Hello World \n https://google.com")
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share on Whatsapp"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.shareOnTelegram(
+                          content: "Hello World \n https://google.com")
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share on Telegram"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.checkInstalledAppsForShare().then((data) {
+                    print(data.toString());
+                  });
+                },
+                child: Text("Get all Apps"),
+              ),
+              RaisedButton(
+                onPressed: () async {
+                  SocialShare.shareOptions(contentText: "Hello world")
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share Options"),
+              ),
+            ],
+          ),
         ),
       ),
     );
