@@ -63,10 +63,10 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                     shareInstagramWithImageUrl(image: UIImage(data: datas) ?? UIImage()) { (flag) in
                     }
                 } else{
-                    self.result?("Something went wrong")
+                    self.result?(NSNumber(value: false))
                 }
             } else {
-                self.result?("Could not load the image")
+                self.result?(NSNumber(value: false))
             }
         case "shareOnWhatsapp":
             let number = arguments["number"] as? String ?? ""
@@ -107,7 +107,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 if let urlSchemeSend = urlSchemeSend {
                     UIApplication.shared.open(urlSchemeSend, options: [:], completionHandler: nil)
                 }
-                result("sharing")
+                self.result?(NSNumber(value: true))
             } else {
                 let urlSchemeSms = "twitter://post?message=\(captionText)"
                 let urlWithLink = urlSchemeSms + (url?.absoluteString ?? "")
@@ -116,7 +116,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 if let urlSchemeMsg = urlSchemeMsg {
                     UIApplication.shared.open(urlSchemeMsg, options: [:], completionHandler: nil)
                 }
-                result("sharing")
+                self.result?(NSNumber(value: true))
             }
         case "shareOnTelegram":
             let content = arguments["content"] as? String
@@ -125,9 +125,9 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             if let telegramURL = telegramURL {
                 if UIApplication.shared.canOpenURL(telegramURL) {
                     UIApplication.shared.openURL(telegramURL)
-                    result(("sharing"))
+                    self.result?(NSNumber(value: true))
                 } else {
-                    result(("cannot open Telegram"))
+                    self.result?(NSNumber(value: false))
                 }
             }
             result(NSNumber(value: true))
@@ -180,9 +180,9 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 shareDialog.fromViewController = flutterAppDelegate.window.rootViewController
                 shareDialog.mode = .automatic
                 shareDialog.show()
-                self.result?("Success")
+                self.result?(NSNumber(value: true))
             } else{
-                self.result?("Failure")
+                self.result?(NSNumber(value: false))
             }
         }
     }
@@ -190,7 +190,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
     private func shareInstagramWithImageUrl(image: UIImage, result:((Bool)->Void)? = nil) {
         guard let instagramURL = NSURL(string: "instagram://app") else {
             if let result = result {
-                self.result?("Instagram app is not installed on your device")
+                self.result?(NSNumber(value: false))
                 result(false)
             }
             return
@@ -205,7 +205,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             })
         } catch {
             if let result = result {
-                self.result?("Failure")
+                self.result?(NSNumber(value: false))
                 result(false)
             }
         }
@@ -216,10 +216,10 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 if let urlForRedirect = NSURL(string: sharingUrl) {
                     UIApplication.shared.open(urlForRedirect as URL, options: [:], completionHandler: nil)
                 }
-                self.result?("Success")
+                self.result?(NSNumber(value: true))
             }
         } else{
-            self.result?("Something went wrong")
+            self.result?(NSNumber(value: false))
         }
     }
     
@@ -229,24 +229,23 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
         let appURL  = NSURL(string: "whatsapp://send?phone=\(String(describing: number))&text=\(urlStringEncoded!)")
         if UIApplication.shared.canOpenURL(appURL! as URL) {
             UIApplication.shared.open(appURL! as URL, options: [:], completionHandler: nil)
-            self.result?("Success")
-        }
-        else {
-            self.result?("Whatsapp app is not installed on your device")
+            self.result?(NSNumber(value: true))
+        } else {
+            self.result?(NSNumber(value: false))
         }
     }
     
     func sendMessage(withRecipient recipent: [String],withTxtMsg txtMsg: String) {
         let string = txtMsg
         if (MFMessageComposeViewController.canSendText()) {
-            self.result?("Success")
             let controller = MFMessageComposeViewController()
             controller.body = string.htmlToString
             controller.recipients = recipent
             controller.messageComposeDelegate = self
             UIApplication.shared.keyWindow?.rootViewController?.present(controller, animated: true, completion: nil)
+            self.result?(NSNumber(value: true))
         } else {
-            self.result?("Message service is not available")
+            self.result?(NSNumber(value: false))
         }
     }
     
@@ -260,8 +259,9 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             mail.setCcRecipients(ccrecipent)
             mail.setBccRecipients(bccrecipent)
             UIApplication.shared.keyWindow?.rootViewController?.present(mail, animated: true, completion: nil)
+            self.result?(NSNumber(value: true))
         } else {
-            self.result?("Mail services are not available")
+            self.result?(NSNumber(value: false))
         }
     }
 }
@@ -282,7 +282,7 @@ extension String {
 
 //MARK: MFMessageComposeViewControllerDelegate
 @available(iOS 10.0, *)
-extension SwiftFlutterSocialContentSharePlugin:MFMessageComposeViewControllerDelegate{
+extension SwiftFlutterSocialContentSharePlugin: MFMessageComposeViewControllerDelegate{
     
     public func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
         let map: [MessageComposeResult: String] = [

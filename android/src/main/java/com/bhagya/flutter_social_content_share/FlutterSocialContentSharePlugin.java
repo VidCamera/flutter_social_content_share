@@ -11,11 +11,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
+import com.facebook.FacebookSdk;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
 
@@ -54,6 +54,8 @@ public class FlutterSocialContentSharePlugin implements FlutterPlugin, MethodCal
 	public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
 		channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "social_share");
 		channel.setMethodCallHandler(this);
+
+		FacebookSdk.sdkInitialize(activity.getApplicationContext());
 	}
 
 	@Override
@@ -260,9 +262,7 @@ public class FlutterSocialContentSharePlugin implements FlutterPlugin, MethodCal
 		if (ShareDialog.canShow(ShareLinkContent.class)) {
 			shareDialog.show(content, ShareDialog.Mode.FEED);
 			result.success(true);
-			Log.d("SMEDIC", "SMEDIC AAAAAA!!!");
 		} else {
-			Log.d("SMEDIC", "SMEDIC AA sranje AAAA!!!");
 			result.success(false);
 		}
 	}
