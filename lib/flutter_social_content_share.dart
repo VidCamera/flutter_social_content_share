@@ -151,6 +151,8 @@ class FlutterSocialContentShare {
   }
 
   static Future<Map> checkInstalledAppsForShare() async {
+    final lol = await _channel.invokeMethod('checkInstalledApps');
+    print("SMEDIC LOL: ${lol}");
     return await _channel.invokeMethod('checkInstalledApps');
   }
 }

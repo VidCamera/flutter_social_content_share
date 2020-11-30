@@ -19,21 +19,40 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
     //MARK: FLUTTER HANDLER CALL
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         self.result = result
+        
+        //these calls don't require arguments
+        if call.method == "getPlatformVersion" {
+            result("iOS " + UIDevice.current.systemVersion)
+        } else if "checkInstalledApps" == call.method {
+            var installedApps: [AnyHashable : Any] = [:]
+            
+            //Enable checks below when instagram and snapchat sharing is implemented
+            installedApps["instagram"] = NSNumber(value: false)
+            installedApps["snapchat"] = NSNumber(value: false)
+            
+            //installedApps["instagram"] = isInstalled(url: "instagram://")
+            //installedApps["snapchat"] = isInstalled(url: "snapchat://")
+            
+            installedApps["facebook"] = isInstalled(url: "facebook://")
+            installedApps["twitter"] = isInstalled(url: "twitter://")
+            installedApps["sms"] = isInstalled(url: "sms://")
+            installedApps["whatsapp"] = isInstalled(url: "whatsapp://")
+            installedApps["telegram"] = isInstalled(url: "tg://")
+            
+            result(installedApps);
+        }
+        
+        //other calls require arguments
         guard let arguments = call.arguments as? [String:Any] else {
             self.result?("Error getting arguments")
             return
         }
         
-        if call.method == "getPlatformVersion" {
-            result("iOS " + UIDevice.current.systemVersion)
-            
-        } else if call.method == "shareOnFacebook" {
-            
+        switch call.method {
+        case "shareOnFacebook":
             shareOnFacebook(withQuote: arguments["quote"] as? String ?? "",
                             withUrl: arguments["url"] as? String ?? "")
-            
-        } else if call.method == "shareOnInstagram" {
-            
+        case "shareOnInstagram":
             let shareImageUrl = arguments["imageUrl"] as? String ?? ""
             
             self.result?(shareImageUrl)
@@ -49,21 +68,15 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             } else {
                 self.result?("Could not load the image")
             }
-            
-        } else if call.method == "shareOnWhatsapp" {
-            
+        case "shareOnWhatsapp":
             let number = arguments["number"] as? String ?? ""
             let text = arguments["text"] as? String ?? ""
             shareWhatsapp(withNumber: number, withTxtMsg: text)
-            
-        } else if call.method == "shareOnSMS" {
-            
+        case "shareOnSMS":
             let recipients = arguments["recipients"] as? [String] ?? []
             let text = arguments["text"] as? String ?? ""
             sendMessage(withRecipient: recipients,withTxtMsg: text)
-            
-        } else if call.method == "shareOnEmail" {
-            
+        case "shareOnEmail":
             let recipients = arguments["recipients"] as? [String] ?? []
             let ccrecipients = arguments["ccrecipients"] as? [String] ?? []
             let bccrecipients = arguments["bccrecipients"] as? [String] ?? []
@@ -72,21 +85,15 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             let isHTML = arguments["isHTML"] as? Bool ?? false
             sendEmail(withRecipient: recipients, withCcRecipient: ccrecipients, withBccRecipient: bccrecipients, withBody: body, withSubject: subject, withisHTML: isHTML)
             result(NSNumber(value: true))
-            
-        } else if call.method == "copyToClipboard" {
-            
+        case "copyToClipboard":
             let content = arguments["content"] as? String
             let pasteBoard = UIPasteboard.general
             pasteBoard.string = content
             result(NSNumber(value: true))
-            
-        } else if call.method == "shareOnSnapchat" {
-            
+        case "shareOnSnapchat":
             //TODO
             result("Not implemented")
-            
-        } else if call.method == "shareOnTwitter" {
-            
+        case "shareOnTwitter":
             let captionText = arguments["captionText"] as? String
             let urlString = arguments["url"] as? String
             
@@ -111,8 +118,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 }
                 result("sharing")
             }
-        } else if call.method == "shareOnTelegram" {
-            
+        case "shareOnTelegram":
             let content = arguments["content"] as? String
             let urlScheme = "tg://msg?text=\(content ?? "")"
             let telegramURL = URL(string: (urlScheme as NSString).addingPercentEscapes(using: String.Encoding.utf8.rawValue) ?? "")
@@ -125,8 +131,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 }
             }
             result(NSNumber(value: true))
-            
-        } else if call.method == "shareOptions" {
+        case "shareOptions":
             let content = arguments["content"] as? String
             let image = arguments["imagePath"] as? String
             if let image = image {
@@ -148,24 +153,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 controller?.present(activityVC, animated: true)
                 result(NSNumber(value: true))
             }
-        } else if "checkInstalledApps" == call.method {
-            var installedApps: [AnyHashable : Any] = [:]
-            
-            //Enable checks below when instagram and snapchat sharing is implemented
-            installedApps["instagram"] = NSNumber(value: false)
-            installedApps["snapchat"] = NSNumber(value: false)
-            
-            //installedApps["instagram"] = isInstalled(url: "instagram://")
-            //installedApps["snapchat"] = isInstalled(url: "snapchat://")
-            
-            installedApps["facebook"] = isInstalled(url: "facebook://")
-            installedApps["twitter"] = isInstalled(url: "twitter://")
-            installedApps["sms"] = isInstalled(url: "sms://")
-            installedApps["whatsapp"] = isInstalled(url: "whatsapp://")
-            installedApps["telegram"] = isInstalled(url: "tg://")
-            
-            result(installedApps);
-        } else {
+        default:
             result(FlutterMethodNotImplemented);
         }
     }
