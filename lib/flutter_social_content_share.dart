@@ -53,7 +53,7 @@ class FlutterSocialContentShare {
     return await _channel.invokeMethod('shareOnEmail', params);
   }
 
-  static Future<String> shareOnFacebook({
+  static Future<bool> shareOnFacebook({
     @required String url,
     String quote,
   }) async {
@@ -64,7 +64,7 @@ class FlutterSocialContentShare {
     return await _channel.invokeMethod('shareOnFacebook', params);
   }
 
-  static Future<String> shareOnInstagram({
+  static Future<bool> shareOnInstagram({
     @required String filePath,
   }) async {
     final Map<String, dynamic> params = <String, dynamic>{
@@ -93,8 +93,8 @@ class FlutterSocialContentShare {
   }
 
   static Future<String> shareOnTwitter({
-    String captionText,
-    String url,
+    @required String captionText,
+    @required String url,
   }) async {
     String modifiedUrl;
 
