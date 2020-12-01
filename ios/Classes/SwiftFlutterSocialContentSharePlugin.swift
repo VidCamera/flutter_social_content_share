@@ -33,7 +33,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             //installedApps["instagram"] = isInstalled(url: "instagram://")
             //installedApps["snapchat"] = isInstalled(url: "snapchat://")
             
-            installedApps["facebook"] = isInstalled(url: "facebook://")
+            installedApps["facebook"] = isInstalled(url: "fb://")
             installedApps["twitter"] = isInstalled(url: "twitter://")
             installedApps["sms"] = isInstalled(url: "sms://")
             installedApps["whatsapp"] = isInstalled(url: "whatsapp://")
