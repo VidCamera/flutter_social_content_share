@@ -16,6 +16,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
+  Map installedApps;
 
   @override
   void initState() {
@@ -150,6 +151,8 @@ class _MyAppState extends State<MyApp> {
                   FlutterSocialContentShare.checkInstalledAppsForShare()
                       .then((data) {
                     print(data.toString());
+                    installedApps = data;
+                    setState(() {});
                   });
                 },
                 child: Text("Get all Apps"),
@@ -163,6 +166,11 @@ class _MyAppState extends State<MyApp> {
                   });
                 },
                 child: Text("Share Options"),
+              ),
+              Text(
+                '${this.installedApps?.toString()}',
+                style: TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
