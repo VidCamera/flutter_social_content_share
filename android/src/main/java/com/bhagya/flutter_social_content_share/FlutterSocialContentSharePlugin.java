@@ -54,8 +54,6 @@ public class FlutterSocialContentSharePlugin implements FlutterPlugin, MethodCal
 	public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
 		channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "social_share");
 		channel.setMethodCallHandler(this);
-
-		FacebookSdk.sdkInitialize(activity.getApplicationContext());
 	}
 
 	@Override
