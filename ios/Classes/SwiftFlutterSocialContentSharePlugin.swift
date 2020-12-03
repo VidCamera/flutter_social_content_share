@@ -94,29 +94,14 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             //TODO
             result("Not implemented")
         case "shareOnTwitter":
-            let captionText = arguments["captionText"] as? String
-            let urlString = arguments["url"] as? String
-            
-            let urlTextEscaped = urlString?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-            
-            let url = URL(string: urlTextEscaped ?? "")
-            
-            if (url?.absoluteString.count ?? 0) == 0 {
-                let urlSchemeTwitter = "twitter://post?message=\(captionText)"
-                let urlSchemeSend = URL(string: urlSchemeTwitter)
-                if let urlSchemeSend = urlSchemeSend {
-                    UIApplication.shared.open(urlSchemeSend, options: [:], completionHandler: nil)
-                }
+            let content = arguments["content"] as? String
+            let urlScheme = "https://twitter.com/intent/tweet?text=\(content!)"
+            let url = URL(string: urlScheme)
+            if let url = url {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 self.result?(NSNumber(value: true))
             } else {
-                let urlSchemeSms = "twitter://post?message=\(captionText)"
-                let urlWithLink = urlSchemeSms + (url?.absoluteString ?? "")
-                let urlSchemeMsg = URL(string: urlWithLink)
-                
-                if let urlSchemeMsg = urlSchemeMsg {
-                    UIApplication.shared.open(urlSchemeMsg, options: [:], completionHandler: nil)
-                }
-                self.result?(NSNumber(value: true))
+                self.result?(NSNumber(value: false))
             }
         case "shareOnTelegram":
             let content = arguments["content"] as? String

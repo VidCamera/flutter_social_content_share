@@ -206,16 +206,15 @@ public class FlutterSocialContentSharePlugin implements FlutterPlugin, MethodCal
 	}
 
 	private void shareOnTwitter(MethodCall call, Result result) {
-		final String text = call.argument("captionText");
-		final String url = call.argument("url");
-		final String urlScheme = "http://www.twitter.com/intent/tweet?text=" + text + url;
+		final String content = call.argument("content");
+		final String urlScheme = "http://www.twitter.com/intent/tweet?text=" + content;
 		final Intent intent = new Intent(Intent.ACTION_VIEW);
 		intent.setData(Uri.parse(urlScheme));
 		try {
 			activity.startActivity(intent);
-			result.success("true");
+			result.success(true);
 		} catch (ActivityNotFoundException exception) {
-			result.success("false");
+			result.success(false);
 		}
 	}
 
@@ -255,7 +254,6 @@ public class FlutterSocialContentSharePlugin implements FlutterPlugin, MethodCal
 		final ShareDialog shareDialog = new ShareDialog(activity);
 		final ShareLinkContent content = new ShareLinkContent.Builder()
 			.setContentUrl(Uri.parse(url))
-			//.setQuote(quote)
 			.build();
 		if (ShareDialog.canShow(ShareLinkContent.class)) {
 			shareDialog.show(content, ShareDialog.Mode.FEED);

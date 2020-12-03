@@ -79,11 +79,10 @@ class FlutterSocialContentShare {
     final Map<String, String> args = <String, String>{
       "content": content.toString()
     };
-    final bool response = await _channel.invokeMethod('copyToClipboard', args);
-    return response;
+    return await _channel.invokeMethod('copyToClipboard', args);
   }
 
-  static Future<String> shareOnSnapchat({
+  static Future<bool> shareOnSnapchat({
     @required String filePath,
   }) async {
     final Map<String, dynamic> args = <String, dynamic>{
@@ -92,33 +91,20 @@ class FlutterSocialContentShare {
     return await _channel.invokeMethod('shareOnSnapchat', args);
   }
 
-  static Future<String> shareOnTwitter({
-    @required String captionText,
-    @required String url,
+  static Future<bool> shareOnTwitter({
+    @required String content,
   }) async {
-    String modifiedUrl;
-
-    if (Platform.isAndroid) {
-      if (url != null) {
-        modifiedUrl = Uri.parse(url).toString().replaceAll('#', "%23");
-      }
-    } else {
-      modifiedUrl = Uri.parse(url).toString();
-    }
-
     Map<String, dynamic> args = <String, dynamic>{
-      "captionText": Uri.parse(captionText + " ").toString(),
-      "url": modifiedUrl,
+      "content": content,
     };
     return await _channel.invokeMethod('shareOnTwitter', args);
   }
 
-  static Future<String> shareOnTelegram({
+  static Future<bool> shareOnTelegram({
     @required String content,
   }) async {
     final Map<String, dynamic> args = <String, dynamic>{"content": content};
-    final String version = await _channel.invokeMethod('shareOnTelegram', args);
-    return version;
+    return await _channel.invokeMethod('shareOnTelegram', args);
   }
 
   static Future<bool> shareOptions({
@@ -151,7 +137,6 @@ class FlutterSocialContentShare {
   }
 
   static Future<Map> checkInstalledAppsForShare() async {
-    final lol = await _channel.invokeMethod('checkInstalledApps');
     return await _channel.invokeMethod('checkInstalledApps');
   }
 }

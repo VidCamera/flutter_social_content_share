@@ -108,8 +108,7 @@ class _MyAppState extends State<MyApp> {
               RaisedButton(
                 onPressed: () async {
                   FlutterSocialContentShare.shareOnTwitter(
-                    captionText: '',
-                    url: "https://vid.camera",
+                    content: 'https://vid.camera',
                   ).then((data) {
                     print(data);
                   });
