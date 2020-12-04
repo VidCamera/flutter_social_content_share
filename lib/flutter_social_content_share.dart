@@ -13,7 +13,7 @@ class FlutterSocialContentShare {
     return await _channel.invokeMethod('getPlatformVersion');
   }
 
-  static Future<String> shareOnWhatsapp({
+  static Future<bool> shareOnWhatsapp({
     String number,
     @required String text,
   }) async {
@@ -24,7 +24,7 @@ class FlutterSocialContentShare {
     return await _channel.invokeMethod('shareOnWhatsapp', params);
   }
 
-  static Future<String> shareOnSMS({
+  static Future<bool> shareOnSMS({
     List recipients,
     @required String text,
   }) async {
@@ -35,7 +35,7 @@ class FlutterSocialContentShare {
     return await _channel.invokeMethod('shareOnSMS', params);
   }
 
-  static Future<String> shareOnEmail(
+  static Future<bool> shareOnEmail(
       {List recipients,
       List ccrecipients,
       List bccrecipients,

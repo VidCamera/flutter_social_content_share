@@ -95,11 +95,11 @@ public class FlutterSocialContentSharePlugin implements FlutterPlugin, MethodCal
 					result.success(false);
 				}
 				break;
-			case "shareOnWhatsupp":
+			case "shareOnWhatsapp":
 				final String textMsg = call.argument("text");
 				shareWhatsApp(textMsg, result);
 				break;
-			case "shareOnSms":
+			case "shareOnSMS":
 				final ArrayList<String> recipients = call.argument("recipients");
 				final String text = call.argument("text");
 				shareSMS(recipients, text, result);
