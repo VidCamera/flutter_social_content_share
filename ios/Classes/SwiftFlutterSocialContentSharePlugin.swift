@@ -84,7 +84,6 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             let body = arguments["body"] as? String ?? ""
             let isHTML = arguments["isHTML"] as? Bool ?? false
             sendEmail(withRecipient: recipients, withCcRecipient: ccrecipients, withBccRecipient: bccrecipients, withBody: body, withSubject: subject, withisHTML: isHTML)
-            result(NSNumber(value: true))
         case "copyToClipboard":
             let content = arguments["content"] as? String
             let pasteBoard = UIPasteboard.general
@@ -245,9 +244,33 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             mail.setBccRecipients(bccrecipent)
             UIApplication.shared.keyWindow?.rootViewController?.present(mail, animated: true, completion: nil)
             self.result?(NSNumber(value: true))
+        // Show 3rd party email composer if default Mail app is not present
+        } else if let emailUrl = createEmailUrl(subject: subject, body: body) {
+            UIApplication.shared.open(emailUrl)
+            self.result?(NSNumber(value: true))
         } else {
             self.result?(NSNumber(value: false))
         }
+    }
+    
+    private func createEmailUrl(subject: String, body: String) -> URL? {
+        let subjectEncoded = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        let bodyEncoded = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        
+        let gmailUrl = URL(string: "googlegmail://co?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        let yahooMail = URL(string: "ymail://mail/compose?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        let sparkUrl = URL(string: "readdle-spark://compose?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        let defaultUrl = URL(string: "mailto:?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        
+        if let gmailUrl = gmailUrl, UIApplication.shared.canOpenURL(gmailUrl) {
+            return gmailUrl
+        } else if let yahooMail = yahooMail, UIApplication.shared.canOpenURL(yahooMail) {
+            return yahooMail
+        } else if let sparkUrl = sparkUrl, UIApplication.shared.canOpenURL(sparkUrl) {
+            return sparkUrl
+        }
+        
+        return defaultUrl
     }
 }
 

@@ -127,6 +127,16 @@ class _MyAppState extends State<MyApp> {
               ),
               RaisedButton(
                 onPressed: () async {
+                  FlutterSocialContentShare.shareOnEmail(
+                          body: "This is Social Share email example")
+                      .then((data) {
+                    print(data);
+                  });
+                },
+                child: Text("Share on Email"),
+              ),
+              RaisedButton(
+                onPressed: () async {
                   FlutterSocialContentShare.shareOnWhatsapp(
                           text: "Hello World \n https://google.com")
                       .then((data) {
