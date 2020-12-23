@@ -6,6 +6,7 @@
 	<array>
 		<string>whatsapp</string>
 		<string>fbapi</string>
+        <string>fb</string>
 		<string>fbauth</string>
 		<string>fbauth2</string>
 		<string>fbshareextension</string>
@@ -20,6 +21,13 @@
 		<string>fbapi20150629</string>
 		<string>instagram</string>
 		<string>instagram-stories</string>
+        <string>facebook</string>
+        <string>twitter</string>
+        <string>tg</string>
+        <string>snapchat</string>
+        <string>googlegmail</string>
+        <string>readdle-spark</string>
+        <string>ymail</string>
 	</array>
 	<key>FacebookAppID</key>
 	<string>xxxxxxxxxxx</string>

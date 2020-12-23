@@ -4,13 +4,14 @@ import FBSDKShareKit
 import Photos
 import MessageUI
 
+@available(iOS 10.0, *)
 public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
     var result: FlutterResult?
     var shareURL:String?
     
     //MARK: PLUGIN REGISTRATION
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "flutter_social_content_share", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: "social_share", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterSocialContentSharePlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
@@ -18,75 +19,137 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
     //MARK: FLUTTER HANDLER CALL
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         self.result = result
+        
+        //these calls don't require arguments
         if call.method == "getPlatformVersion" {
             result("iOS " + UIDevice.current.systemVersion)
-        } else if call.method == "share"{
-            if let arguments = call.arguments as? [String:Any] {
-                let type = arguments["type"] as? String ?? "ShareType.more"
-                let shareQuote = arguments["quote"] as? String ?? ""
-                let shareUrl = arguments["url"] as? String ?? ""
-                let shareImageUrl = arguments["imageUrl"] as? String ?? ""
-                _ = arguments["imageName"] as? String ?? ""
-                
-                switch type {
-                case "ShareType.facebookWithoutImage":
-                    shareFacebookWithoutImage(withQuote: shareQuote, withUrl: shareUrl)
-                    break
-                    
-                case "ShareType.instagramWithImageUrl":
-                    self.result?(shareImageUrl)
-                    let url = URL(string: shareImageUrl)
-                    if let urlData = url {
-                        let data = try? Data(contentsOf: urlData)
-                        if let datas = data {
-                            shareInstagramWithImageUrl(image: UIImage(data: datas) ?? UIImage()) { (flag) in
-                            }
-                        }else{
-                            self.result?("Something went wrong")
-                        }
+        } else if "checkInstalledApps" == call.method {
+            var installedApps: [AnyHashable : Any] = [:]
+            
+            //Enable checks below when instagram and snapchat sharing is implemented
+            installedApps["instagram"] = NSNumber(value: false)
+            installedApps["snapchat"] = NSNumber(value: false)
+            
+            //installedApps["instagram"] = isInstalled(url: "instagram://")
+            //installedApps["snapchat"] = isInstalled(url: "snapchat://")
+            
+            installedApps["facebook"] = isInstalled(url: "fb://")
+            installedApps["twitter"] = isInstalled(url: "twitter://")
+            installedApps["sms"] = isInstalled(url: "sms://")
+            installedApps["whatsapp"] = isInstalled(url: "whatsapp://")
+            installedApps["telegram"] = isInstalled(url: "tg://")
+            
+            result(installedApps);
+        }
+        
+        //other calls require arguments
+        guard let arguments = call.arguments as? [String:Any] else {
+            self.result?("Error getting arguments")
+            return
+        }
+        
+        switch call.method {
+        case "shareOnFacebook":
+            shareOnFacebook(withQuote: arguments["quote"] as? String ?? "",
+                            withUrl: arguments["url"] as? String ?? "")
+        case "shareOnInstagram":
+            let shareImageUrl = arguments["imageUrl"] as? String ?? ""
+            
+            self.result?(shareImageUrl)
+            let url = URL(string: shareImageUrl)
+            if let urlData = url {
+                let data = try? Data(contentsOf: urlData)
+                if let datas = data {
+                    shareInstagramWithImageUrl(image: UIImage(data: datas) ?? UIImage()) { (flag) in
                     }
-                    else{
-                        self.result?("Could not load the image")
-                    }
-                    break
-                case "ShareType.more":
-                    self.result?("Method not implemented")
-                    break
-                default:
-                    break
+                } else{
+                    self.result?(NSNumber(value: false))
+                }
+            } else {
+                self.result?(NSNumber(value: false))
+            }
+        case "shareOnWhatsapp":
+            let number = arguments["number"] as? String ?? ""
+            let text = arguments["text"] as? String ?? ""
+            shareWhatsapp(withNumber: number, withTxtMsg: text)
+        case "shareOnSMS":
+            let recipients = arguments["recipients"] as? [String] ?? []
+            let text = arguments["text"] as? String ?? ""
+            sendMessage(withRecipient: recipients,withTxtMsg: text)
+        case "shareOnEmail":
+            let recipients = arguments["recipients"] as? [String] ?? []
+            let ccrecipients = arguments["ccrecipients"] as? [String] ?? []
+            let bccrecipients = arguments["bccrecipients"] as? [String] ?? []
+            let subject = arguments["subject"] as? String ?? ""
+            let body = arguments["body"] as? String ?? ""
+            let isHTML = arguments["isHTML"] as? Bool ?? false
+            sendEmail(withRecipient: recipients, withCcRecipient: ccrecipients, withBccRecipient: bccrecipients, withBody: body, withSubject: subject, withisHTML: isHTML)
+        case "copyToClipboard":
+            let content = arguments["content"] as? String
+            let pasteBoard = UIPasteboard.general
+            pasteBoard.string = content
+            result(NSNumber(value: true))
+        case "shareOnSnapchat":
+            //TODO
+            result("Not implemented")
+        case "shareOnTwitter":
+            let content = arguments["content"] as? String
+            let urlScheme = "https://twitter.com/intent/tweet?text=\(content!)"
+            let url = URL(string: urlScheme)
+            if let url = url {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                self.result?(NSNumber(value: true))
+            } else {
+                self.result?(NSNumber(value: false))
+            }
+        case "shareOnTelegram":
+            let content = arguments["content"] as? String
+            let urlScheme = "tg://msg?text=\(content ?? "")"
+            let telegramURL = URL(string: (urlScheme as NSString).addingPercentEscapes(using: String.Encoding.utf8.rawValue) ?? "")
+            if let telegramURL = telegramURL {
+                if UIApplication.shared.canOpenURL(telegramURL) {
+                    UIApplication.shared.openURL(telegramURL)
+                    self.result?(NSNumber(value: true))
+                } else {
+                    self.result?(NSNumber(value: false))
                 }
             }
-        } else if (call.method == "shareOnWhatsapp"){
-            if let arguments = call.arguments as? [String:Any] {
-                let number = arguments["number"] as? String ?? ""
-                let text = arguments["text"] as? String ?? ""
-                shareWhatsapp(withNumber: number, withTxtMsg: text)
+            result(NSNumber(value: true))
+        case "shareOptions":
+            let content = arguments["content"] as? String
+            let image = arguments["imagePath"] as? String
+            if let image = image {
+                let fileManager = FileManager.default
+                let isFileExist = fileManager.fileExists(atPath: image)
+                var imgShare: UIImage?
+                if isFileExist {
+                    imgShare = UIImage(contentsOfFile: image)
+                }
+                let objectsToShare = [content, imgShare] as [Any]
+                let activityVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
+                let controller = UIApplication.shared.keyWindow?.rootViewController
+                controller?.present(activityVC, animated: true)
+                result(NSNumber(value: true))
+            } else {
+                let objectsToShare = [content]
+                let activityVC = UIActivityViewController(activityItems: objectsToShare.compactMap { $0 }, applicationActivities: nil)
+                let controller = UIApplication.shared.keyWindow?.rootViewController
+                controller?.present(activityVC, animated: true)
+                result(NSNumber(value: true))
             }
-        }
-
-        else if (call.method == "shareOnSMS"){
-            if let arguments = call.arguments as? [String:Any] {
-                let recipients = arguments["recipients"] as? [String] ?? []
-                let text = arguments["text"] as? String ?? ""
-                sendMessage(withRecipient: recipients,withTxtMsg: text)
-            }
-        }
-            
-        else if (call.method == "shareOnEmail"){
-            if let arguments = call.arguments as? [String:Any] {
-                let recipients = arguments["recipients"] as? [String] ?? []
-                let ccrecipients = arguments["ccrecipients"] as? [String] ?? []
-                let bccrecipients = arguments["bccrecipients"] as? [String] ?? []
-                let subject = arguments["subject"] as? String ?? ""
-                let body = arguments["body"] as? String ?? ""
-                let isHTML = arguments["isHTML"] as? Bool ?? false
-                sendEmail(withRecipient: recipients, withCcRecipient: ccrecipients, withBccRecipient: bccrecipients, withBody: body, withSubject: subject, withisHTML: isHTML)
-            }
+        default:
+            result(FlutterMethodNotImplemented);
         }
     }
     
-    //MARK: SHARE POST ON FACEBOOK WITHOUT IMAGE
-    private func shareFacebookWithoutImage(withQuote quote: String?, withUrl urlString: String?) {
+    private func isInstalled(url: String) -> NSNumber {
+        if let url = URL(string: url) {
+            return UIApplication.shared.canOpenURL(url) ? NSNumber(value: true) : NSNumber(value: false)
+        }
+        return NSNumber(value: false)
+    }
+    
+    private func shareOnFacebook(withQuote quote: String?, withUrl urlString: String?) {
         DispatchQueue.main.async {
             let shareContent = ShareLinkContent()
             let shareDialog = ShareDialog()
@@ -101,18 +164,17 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
                 shareDialog.fromViewController = flutterAppDelegate.window.rootViewController
                 shareDialog.mode = .automatic
                 shareDialog.show()
-                self.result?("Success")
+                self.result?(NSNumber(value: true))
             } else{
-                self.result?("Failure")
+                self.result?(NSNumber(value: false))
             }
         }
     }
     
-    //MARK: SHARE POST ON INSTAGRAM WITH IMAGE NETWORKING URL
     private func shareInstagramWithImageUrl(image: UIImage, result:((Bool)->Void)? = nil) {
         guard let instagramURL = NSURL(string: "instagram://app") else {
             if let result = result {
-                self.result?("Instagram app is not installed on your device")
+                self.result?(NSNumber(value: false))
                 result(false)
             }
             return
@@ -127,7 +189,7 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             })
         } catch {
             if let result = result {
-                self.result?("Failure")
+                self.result?(NSNumber(value: false))
                 result(false)
             }
         }
@@ -136,58 +198,40 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
         if UIApplication.shared.canOpenURL(instagramURL as URL) {
             if let sharingUrl = self.shareURL {
                 if let urlForRedirect = NSURL(string: sharingUrl) {
-                    if #available(iOS 10.0, *) {
-                        UIApplication.shared.open(urlForRedirect as URL, options: [:], completionHandler: nil)
-                    }
-                    else{
-                        UIApplication.shared.openURL(urlForRedirect as URL)
-                    }
+                    UIApplication.shared.open(urlForRedirect as URL, options: [:], completionHandler: nil)
                 }
-                self.result?("Success")
+                self.result?(NSNumber(value: true))
             }
         } else{
-            self.result?("Something went wrong")
+            self.result?(NSNumber(value: false))
         }
     }
-    
-    
-    //MARK: SHARE VIA WHATSAPP
     
     func shareWhatsapp(withNumber number: String, withTxtMsg txtMsg: String){
         let urlString = txtMsg.htmlToString
         let urlStringEncoded = urlString.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)
         let appURL  = NSURL(string: "whatsapp://send?phone=\(String(describing: number))&text=\(urlStringEncoded!)")
         if UIApplication.shared.canOpenURL(appURL! as URL) {
-            if #available(iOS 10.0, *) {
-                UIApplication.shared.open(appURL! as URL, options: [:], completionHandler: nil)
-            }
-            else {
-                UIApplication.shared.openURL(appURL! as URL)
-            }
-            self.result?("Success")
-        }
-        else {
-            self.result?("Whatsapp app is not installed on your device")
+            UIApplication.shared.open(appURL! as URL, options: [:], completionHandler: nil)
+            self.result?(NSNumber(value: true))
+        } else {
+            self.result?(NSNumber(value: false))
         }
     }
-    //MARK: SEND MESSAGE
     
     func sendMessage(withRecipient recipent: [String],withTxtMsg txtMsg: String) {
         let string = txtMsg
         if (MFMessageComposeViewController.canSendText()) {
-            self.result?("Success")
             let controller = MFMessageComposeViewController()
             controller.body = string.htmlToString
             controller.recipients = recipent
             controller.messageComposeDelegate = self
             UIApplication.shared.keyWindow?.rootViewController?.present(controller, animated: true, completion: nil)
+            self.result?(NSNumber(value: true))
         } else {
-            self.result?("Message service is not available")
+            self.result?(NSNumber(value: false))
         }
     }
-    
-    
-    //MARK: SEND EMAIL
     
     func sendEmail(withRecipient recipent: [String], withCcRecipient ccrecipent: [String],withBccRecipient bccrecipent: [String],withBody body: String, withSubject subject: String, withisHTML isHTML:Bool ) {
         if MFMailComposeViewController.canSendMail() {
@@ -199,14 +243,37 @@ public class SwiftFlutterSocialContentSharePlugin: NSObject, FlutterPlugin {
             mail.setCcRecipients(ccrecipent)
             mail.setBccRecipients(bccrecipent)
             UIApplication.shared.keyWindow?.rootViewController?.present(mail, animated: true, completion: nil)
+            self.result?(NSNumber(value: true))
+        // Show 3rd party email composer if default Mail app is not present
+        } else if let emailUrl = createEmailUrl(subject: subject, body: body) {
+            UIApplication.shared.open(emailUrl)
+            self.result?(NSNumber(value: true))
         } else {
-            self.result?("Mail services are not available")
+            self.result?(NSNumber(value: false))
         }
+    }
+    
+    private func createEmailUrl(subject: String, body: String) -> URL? {
+        let subjectEncoded = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        let bodyEncoded = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        
+        let gmailUrl = URL(string: "googlegmail://co?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        let yahooMail = URL(string: "ymail://mail/compose?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        let sparkUrl = URL(string: "readdle-spark://compose?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        let defaultUrl = URL(string: "mailto:?subject=\(subjectEncoded)&body=\(bodyEncoded)")
+        
+        if let gmailUrl = gmailUrl, UIApplication.shared.canOpenURL(gmailUrl) {
+            return gmailUrl
+        } else if let yahooMail = yahooMail, UIApplication.shared.canOpenURL(yahooMail) {
+            return yahooMail
+        } else if let sparkUrl = sparkUrl, UIApplication.shared.canOpenURL(sparkUrl) {
+            return sparkUrl
+        }
+        
+        return defaultUrl
     }
 }
 
-
-//MARK: EXTENSIONS FOR STRING
 extension String {
     var htmlToAttributedString: NSAttributedString? {
         guard let data = data(using: .utf8) else { return NSAttributedString() }
@@ -222,7 +289,8 @@ extension String {
 }
 
 //MARK: MFMessageComposeViewControllerDelegate
-extension SwiftFlutterSocialContentSharePlugin:MFMessageComposeViewControllerDelegate{
+@available(iOS 10.0, *)
+extension SwiftFlutterSocialContentSharePlugin: MFMessageComposeViewControllerDelegate{
     
     public func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
         let map: [MessageComposeResult: String] = [
@@ -239,6 +307,7 @@ extension SwiftFlutterSocialContentSharePlugin:MFMessageComposeViewControllerDel
 
 
 //MARK: MFMailComposeViewControllerDelegate
+@available(iOS 10.0, *)
 extension SwiftFlutterSocialContentSharePlugin: MFMailComposeViewControllerDelegate{
     public func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
         UIApplication.shared.keyWindow?.rootViewController?.dismiss(animated: true, completion: nil)
